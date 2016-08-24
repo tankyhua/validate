@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 )
@@ -59,12 +58,9 @@ func (this *parse) parseStruct(value reflect.Value) (string, bool) {
 				}
 			}
 			if len(this.tag) <= 0 {
-
 				//获取tag
 				if len(this.getTag(value.Type())) <= 0 {
-					fmt.Println("tag长度:", len(this.getTag(value.Type())), " 名称:", fieldName)
 					if !value.Type().Field(i).Anonymous {
-						fmt.Println("跳过")
 						continue //当tag长度=0且不是匿名字段时,说明无需验证
 					}
 				}
@@ -79,15 +75,13 @@ func (this *parse) parseStruct(value reflect.Value) (string, bool) {
 				}
 				// 遍历
 				for j := 0; j < length; j++ {
-					var res, isOk = this.parseStruct(value.Field(i).Index(j))
-					if !isOk {
+					if res, isOk := this.parseStruct(value.Field(i).Index(j)); !isOk {
 						return res, isOk
 					}
 				}
 
 			} else {
-				var name, ok = this.parseStructOne(value)
-				if !ok {
+				if name, ok := this.parseStructOne(value); !ok {
 					return name, ok
 				}
 			}
@@ -193,7 +187,6 @@ func (this parse) validateValueInt(l int, value string) bool {
 		switch k {
 		case validateTypeVal.ToString(): //判断是否允许为空
 			if !this.validateStringType(v, value) {
-				fmt.Println("l", l)
 				return false
 			}
 
@@ -226,7 +219,7 @@ func (this parse) validateValueInt(l int, value string) bool {
 			if !ltInt(v, l) {
 				return false
 			}
-		case validateTypeLte.ToString(): //<=
+		case validateTypeLte.ToString(): // <=
 			if !lteInt(v, l) {
 				return false
 			}
@@ -241,17 +234,12 @@ func (this parse) validateValueInt(l int, value string) bool {
 //  value: 实际值
 func (this parse) validateStringType(str string, value string) bool {
 	for k, v := range validateFuncMap {
-		if strings.Contains(str, k.ToString()) {
-			if isok, _ := this.com.validateFunc(value, v); isok {
-				return true
-			}
-
-		} else { //不存在类型验证
-			return true
+		if strings.HasPrefix(str, k.ToString()) {
+			var isok, _ = this.com.validateFunc(value, v)
+			return isok
 		}
 	}
-
-	return false
+	return true
 
 }
 

@@ -3,12 +3,14 @@ package validate
 import (
 	"reflect"
 	"regexp"
+	"sync"
 )
 
 type common struct {
 }
 
 var (
+	mu sync.Mutex //互斥锁
 	// tagMap 结构体tag Map
 	tagMap = make(map[string]reflect.StructTag)
 
@@ -51,6 +53,12 @@ var validateFuncMap = map[validateFuncType]string{
 	isAccount:  `^\w{6,20}$`,
 }
 
+func setFuncMap(tp validateFuncType, regex string) {
+	mu.Lock()
+	defer mu.Unlock()
+	validateFuncMap[tp] = regex
+}
+
 //  ValidateFunc 通用正则验证方法
 func (this *common) validateFunc(value string, regular string) (bool, error) {
 
@@ -59,7 +67,9 @@ func (this *common) validateFunc(value string, regular string) (bool, error) {
 }
 
 func (this *common) setModelMap(name, fieldName string, tag reflect.StructTag) {
-	if len(string(tag)) > 0 { //反正是匿名字段
+	if len(string(tag)) > 0 { //防止是匿名字段
+		mu.Lock()
+		defer mu.Unlock()
 		if modelMap[name] != nil { //有记录时
 			tagMap = modelMap[name]
 		} else {
