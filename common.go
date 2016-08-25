@@ -10,7 +10,9 @@ type common struct {
 }
 
 var (
-	mu sync.Mutex //互斥锁
+	//互斥锁
+	mu sync.Mutex
+
 	// tagMap 结构体tag Map
 	tagMap = make(map[string]reflect.StructTag)
 
@@ -18,6 +20,7 @@ var (
 	modelMap = make(map[string]map[string]reflect.StructTag)
 )
 
+// validateFuncType 字符串验证类型
 type validateFuncType string
 
 const (
@@ -53,6 +56,7 @@ var validateFuncMap = map[validateFuncType]string{
 	isAccount:  `^\w{6,20}$`,
 }
 
+// setFuncMap 设置验证正则map
 func setFuncMap(tp validateFuncType, regex string) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -61,18 +65,16 @@ func setFuncMap(tp validateFuncType, regex string) {
 
 //  ValidateFunc 通用正则验证方法
 func (this *common) validateFunc(value string, regular string) (bool, error) {
-
 	return regexp.MatchString(regular, value)
-
 }
 
+// setModelMap 设置modelMap
 func (this *common) setModelMap(name, fieldName string, tag reflect.StructTag) {
 	if len(string(tag)) > 0 { //防止是匿名字段
 		mu.Lock()
 		defer mu.Unlock()
-		if modelMap[name] != nil { //有记录时
-			tagMap = modelMap[name]
-		} else {
+		tagMap, ok := modelMap[name]
+		if !ok {
 			//清空tagMap数据
 			tagMap = make(map[string]reflect.StructTag)
 		}
@@ -82,6 +84,7 @@ func (this *common) setModelMap(name, fieldName string, tag reflect.StructTag) {
 
 }
 
+// getMoldeMap 获取tag数据
 func (this *common) getMoldeMap(name string) (map[string]reflect.StructTag, bool) {
 	var res, ok = modelMap[name]
 	return res, ok

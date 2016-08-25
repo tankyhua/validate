@@ -52,8 +52,7 @@ func (this *parse) parseStruct(value reflect.Value) (string, bool) {
 			this.tag = ""
 			var fieldName = value.Type().Field(i).Name
 			if ok { //是否已存在tag记录
-				var tag, isOk = res[fieldName]
-				if isOk {
+				if tag, isOk := res[fieldName]; isOk {
 					this.tag = tag
 				}
 			}
@@ -67,7 +66,7 @@ func (this *parse) parseStruct(value reflect.Value) (string, bool) {
 				//记录全局tag,以便多次使用
 				this.com.setModelMap(modelName, fieldName, this.getTag(value.Type()))
 			}
-			// 属否是切片数组
+			// 是否是切片数组
 			if value.Field(i).Kind() == reflect.Slice {
 				var length = value.Field(i).Len()
 				if length <= 0 { //数组为空
@@ -128,9 +127,6 @@ func (this *parse) parseStructOne(value reflect.Value) (string, bool) {
 
 		}
 
-	}
-	if ok {
-		return "", ok
 	}
 	return this.getFail(value), ok
 }
